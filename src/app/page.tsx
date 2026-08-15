@@ -12,7 +12,7 @@ export default function Home() {
         <h1 className="text-3xl font-bold mb-3">FE-06: Streaming Chat</h1>
         <p className="text-zinc-400 mb-8 text-sm leading-relaxed">
           A production-quality streaming chat interface built with 
-          Next.js 14, Vercel AI SDK, and Google Gemini.
+          Next.js 14, Vercel AI SDK, and OpenRouter.
         </p>
         <Link
           href="/chat"

@@ -15,7 +15,7 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: "FE-06: Streaming Chat",
-  description: "A streaming chat interface built with Next.js 14, Vercel AI SDK, and Google Gemini.",
+  description: "A streaming chat interface built with Next.js 14, Vercel AI SDK, and OpenRouter.",
 };
 
 export default function RootLayout({

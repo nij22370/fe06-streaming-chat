@@ -143,7 +143,7 @@ export default function ChatPage() {
           </button>
         </form>
         <p className="text-xs text-zinc-600 mt-2 text-center">
-          Built by Sandesh Dhakal · FE-06 · Powered by Gemini
+          Built by Sandesh Dhakal · FE-06 · Powered by OpenRouter
         </p>
       </div>
     </div>

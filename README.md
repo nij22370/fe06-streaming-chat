@@ -1,7 +1,7 @@
 # FE-06: Streaming Chat Interface
 
-Production-quality streaming chat built with Next.js 14, Vercel AI SDK, 
-and Google Gemini (free tier).
+Production-quality streaming chat built with Next.js 14, Vercel AI SDK,
+and OpenRouter.
 
 ## Features
 - Token-by-token streaming via AI SDK streamText
@@ -15,12 +15,12 @@ and Google Gemini (free tier).
 ## Stack
 - Next.js 14 (App Router)
 - Vercel AI SDK (streamText + useChat)
-- Google Gemini 3.6 Flash via @ai-sdk/google
+- OpenRouter (openai/gpt-4o-mini) via @openrouter/ai-sdk-provider
 - Tailwind CSS
 
 ## Run locally
 cp .env.example .env.local
-# Add your GOOGLE_GENERATIVE_AI_API_KEY to .env.local
+# Add your OPENROUTER_API_KEY to .env.local
 npm install
 npm run dev
 
@@ -30,3 +30,7 @@ npm run dev
 - src/hooks/useStreamingChat.ts — chat state + auto-scroll logic
 - src/components/ — ChatMessage, ThinkingIndicator, StopButton
 - src/app/chat/page.tsx — main chat UI
+
+## Historical note
+This project previously used Google Gemini via @ai-sdk/google
+(GOOGLE_GENERATIVE_AI_API_KEY) and has since been migrated to OpenRouter.

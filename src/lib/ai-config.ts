@@ -3,11 +3,16 @@
  * All model settings live here — change once, affects everywhere.
  * FE-07 will extend this file directly.
  */
-import { google } from '@ai-sdk/google'
+import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 
-// Model — gemini-3.6-flash is the current free-tier, fast, capable chat model
-// (gemini-1.5-flash from the original assignment was retired by Google in 2026)
-export const DEFAULT_MODEL = google('gemini-3.6-flash')
+// OpenRouter provider — API key read from OPENROUTER_API_KEY env var (server-side only)
+export const openrouter = createOpenRouter({
+  apiKey: process.env.OPENROUTER_API_KEY,
+  compatibility: 'strict',
+})
+
+// Model — openai/gpt-4o-mini is a fast, capable, affordable chat model
+export const DEFAULT_MODEL = openrouter('openai/gpt-4o-mini')
 
 // System prompt — defines assistant behavior
 export const SYSTEM_PROMPT = `You are a helpful AI assistant built by Sandesh Dhakal
