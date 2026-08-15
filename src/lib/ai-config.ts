@@ -5,8 +5,9 @@
  */
 import { google } from '@ai-sdk/google'
 
-// Model — gemini-1.5-flash is free tier, fast, and capable for chat
-export const DEFAULT_MODEL = google('gemini-1.5-flash')
+// Model — gemini-3.6-flash is the current free-tier, fast, capable chat model
+// (gemini-1.5-flash from the original assignment was retired by Google in 2026)
+export const DEFAULT_MODEL = google('gemini-3.6-flash')
 
 // System prompt — defines assistant behavior
 export const SYSTEM_PROMPT = `You are a helpful AI assistant built by Sandesh Dhakal

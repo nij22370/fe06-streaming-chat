@@ -15,7 +15,7 @@ and Google Gemini (free tier).
 ## Stack
 - Next.js 14 (App Router)
 - Vercel AI SDK (streamText + useChat)
-- Google Gemini 1.5 Flash via @ai-sdk/google
+- Google Gemini 3.6 Flash via @ai-sdk/google
 - Tailwind CSS
 
 ## Run locally
