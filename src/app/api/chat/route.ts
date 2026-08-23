@@ -5,6 +5,16 @@ import { getNpmPackageInfo } from '@/tools/npmPackage'
 export const maxDuration = 30
 
 export async function POST(req: Request) {
+  // Test error injection — remove before final submission
+  // Add ?error=1 to trigger a 500 for testing
+  const url = new URL(req.url)
+  if (url.searchParams.get('error') === '1') {
+    return new Response(
+      JSON.stringify({ error: 'Simulated API error for testing' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    )
+  }
+
   const { messages } = await req.json()
 
   const result = await streamText({

@@ -4,13 +4,17 @@ import { useStreamingChat } from '@/hooks/useStreamingChat'
 import { ChatMessage } from '@/components/ChatMessage'
 import { ThinkingIndicator } from '@/components/ThinkingIndicator'
 import { StopButton } from '@/components/StopButton'
-import { FormEvent, KeyboardEvent } from 'react'
+import { ErrorMessage } from '@/components/ErrorMessage'
+import { EmptyState } from '@/components/EmptyState'
+import { MessageSkeleton } from '@/components/MessageSkeleton'
 import { NpmPackageCard } from '@/components/tools/NpmPackageCard'
-import { 
-  ToolInputStreaming, 
-  ToolInputAvailable, 
-  ToolOutputError 
+import { NpmPackageResult } from '@/tools/npmPackage'
+import {
+  ToolInputStreaming,
+  ToolInputAvailable,
+  ToolOutputError,
 } from '@/components/tools/ToolStates'
+import { FormEvent, KeyboardEvent } from 'react'
 
 export default function ChatPage() {
   const {
@@ -26,6 +30,10 @@ export default function ChatPage() {
     handleScroll,
     showScrollButton,
     scrollToBottom,
+    error,
+    handleRetry,
+    isRetrying,
+    fillInput,
   } = useStreamingChat()
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -43,14 +51,22 @@ export default function ChatPage() {
     }
   }
 
-  return (
-    <div className="flex flex-col h-screen bg-zinc-950 text-white relative">
+  const handleExampleClick = (text: string) => {
+    fillInput(text)
+  }
 
+  return (
+    <div 
+      className="flex flex-col bg-zinc-950 text-white relative"
+      style={{ height: '100dvh' }}
+    >
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 
         border-b border-zinc-800 bg-zinc-900 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+          <div className={`w-2 h-2 rounded-full ${
+            error ? 'bg-red-400' : 'bg-green-400 animate-pulse'
+          }`} />
           <h1 className="text-sm font-semibold text-zinc-100">
             AI Chat — FE-06
           </h1>
@@ -67,83 +83,81 @@ export default function ChatPage() {
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-4 py-6"
+        className="flex-1 overflow-y-auto px-4 py-6 
+          overscroll-none -webkit-overflow-scrolling-touch"
       >
-        {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-14 h-14 rounded-full bg-violet-600 flex items-center 
-              justify-center text-white font-bold text-xl mb-4">
-              AI
-            </div>
-            <h2 className="text-zinc-200 font-semibold mb-2">
-              Ask me anything
-            </h2>
-            <p className="text-zinc-500 text-sm max-w-xs">
-              Frontend development, React, Next.js, TypeScript, 
-              or general coding questions.
-            </p>
-          </div>
+        {/* Empty state */}
+        {messages.length === 0 && !isLoading && (
+          <EmptyState onExampleClick={handleExampleClick} />
         )}
 
+        {/* Skeleton on first load */}
+        {messages.length === 0 && isLoading && (
+          <MessageSkeleton />
+        )}
+
+        {/* Messages */}
         {messages.map((message) => (
           <div key={message.id}>
-            {/* Render text parts */}
             {message.role === 'user' ? (
               <ChatMessage message={message} />
             ) : (
               <>
-                {/* Assistant text content */}
-                {message.content && typeof message.content === 'string' && 
+                {message.content &&
+                  typeof message.content === 'string' &&
                   message.content.trim() && (
-                  <ChatMessage message={message} />
-                )}
+                    <ChatMessage message={message} />
+                  )}
 
-                {/* Tool parts */}
-                {message.toolInvocations?.map((tool) => {
-                  // State 1 & 2: Tool is being called
+                {(message.toolInvocations as Array<{
+                  toolCallId: string
+                  toolName: string
+                  state: 'partial-call' | 'call' | 'result'
+                  args?: Record<string, string>
+                  result?: Record<string, unknown> & {
+                    error?: string
+                    name?: string
+                  }
+                }> | undefined)?.map((tool) => {
                   if (tool.state === 'partial-call') {
                     return (
-                      <div key={tool.toolCallId} className="flex justify-start mb-2">
+                      <div key={tool.toolCallId} 
+                        className="flex justify-start mb-2">
                         <ToolInputStreaming />
                       </div>
                     )
                   }
-
-                  // State 2: Input available, waiting for result
                   if (tool.state === 'call') {
                     return (
-                      <div key={tool.toolCallId} className="flex justify-start mb-2">
-                        <ToolInputAvailable 
-                          packageName={tool.args?.packageName ?? '...'} 
+                      <div key={tool.toolCallId} 
+                        className="flex justify-start mb-2">
+                        <ToolInputAvailable
+                          packageName={tool.args?.packageName ?? '...'}
                         />
                       </div>
                     )
                   }
-
-                  // State 3 & 4: Result or error available
                   if (tool.state === 'result') {
-                    // Check if result is an error
                     if (tool.result?.error || !tool.result?.name) {
                       return (
-                        <div key={tool.toolCallId} 
+                        <div key={tool.toolCallId}
                           className="flex justify-start mb-2">
                           <ToolOutputError
                             packageName={tool.args?.packageName}
-                            errorMessage={tool.result?.error}
+                            errorMessage={tool.result?.error as string}
                           />
                         </div>
                       )
                     }
-
-                    // Success — render the card
                     return (
-                      <div key={tool.toolCallId} 
+                      <div key={tool.toolCallId}
                         className="flex justify-start mb-2">
-                        <NpmPackageCard data={tool.result} />
+                        <NpmPackageCard
+                          data={tool.result as unknown as NpmPackageResult}
+                        />
                       </div>
                     )
                   }
-
                   return null
                 })}
               </>
@@ -151,7 +165,7 @@ export default function ChatPage() {
           </div>
         ))}
 
-        {/* Thinking indicator — shows before first token */}
+        {/* Thinking indicator */}
         {isLoading && messages[messages.length - 1]?.role === 'user' && (
           <div className="flex justify-start mb-4">
             <div className="w-7 h-7 rounded-full bg-violet-600 flex items-center 
@@ -162,6 +176,15 @@ export default function ChatPage() {
           </div>
         )}
 
+        {/* Error state */}
+        {error && !isLoading && (
+          <ErrorMessage
+            message={error.message}
+            onRetry={handleRetry}
+            isRetrying={isRetrying}
+          />
+        )}
+
         <div ref={bottomRef} />
       </div>
 
@@ -169,16 +192,17 @@ export default function ChatPage() {
       {showScrollButton && (
         <button
           onClick={scrollToBottom}
-          className="absolute bottom-28 right-4 w-9 h-9 rounded-full bg-zinc-700 
-            hover:bg-zinc-600 border border-zinc-600 text-zinc-200 shadow-lg 
-            transition-all flex items-center justify-center text-lg"
+          className="absolute bottom-28 right-4 w-9 h-9 rounded-full 
+            bg-zinc-700 hover:bg-zinc-600 border border-zinc-600 
+            text-zinc-200 shadow-lg transition-all flex items-center 
+            justify-center text-lg z-10"
           aria-label="Scroll to latest message"
         >
           ↓
         </button>
       )}
 
-      {/* Stop button — visible while streaming */}
+      {/* Stop button */}
       {isLoading && (
         <div className="flex justify-center py-2 flex-shrink-0">
           <StopButton onStop={stop} />
@@ -186,7 +210,10 @@ export default function ChatPage() {
       )}
 
       {/* Input area */}
-      <div className="px-4 pb-4 pt-2 border-t border-zinc-800 bg-zinc-900 flex-shrink-0">
+      <div className="px-4 pb-safe pt-2 border-t border-zinc-800 
+        bg-zinc-900 flex-shrink-0"
+        style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+      >
         <form onSubmit={onSubmit} className="flex items-end gap-2">
           <textarea
             value={input}
@@ -198,7 +225,8 @@ export default function ChatPage() {
             className="flex-1 resize-none bg-zinc-800 text-zinc-100 
               placeholder-zinc-500 rounded-xl px-4 py-3 text-sm 
               focus:outline-none focus:ring-1 focus:ring-violet-500 
-              disabled:opacity-50 max-h-32 overflow-y-auto"
+              disabled:opacity-50 max-h-32 overflow-y-auto
+              text-base"
           />
           <button
             type="submit"

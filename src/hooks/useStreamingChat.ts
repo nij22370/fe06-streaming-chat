@@ -1,5 +1,5 @@
 import { useChat } from 'ai/react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 
 export function useStreamingChat() {
   const {
@@ -10,6 +10,9 @@ export function useStreamingChat() {
     isLoading,
     stop,
     setMessages,
+    reload,
+    error,
+    setInput,
   } = useChat({
     api: '/api/chat',
     onError: (error) => {
@@ -21,6 +24,7 @@ export function useStreamingChat() {
   const containerRef = useRef<HTMLDivElement>(null)
   const [isAtBottom, setIsAtBottom] = useState(true)
   const [showScrollButton, setShowScrollButton] = useState(false)
+  const [isRetrying, setIsRetrying] = useState(false)
 
   // Track if user has scrolled up
   const handleScroll = () => {
@@ -48,6 +52,22 @@ export function useStreamingChat() {
 
   const clearChat = () => setMessages([])
 
+  // Retry last failed message
+  const handleRetry = useCallback(async () => {
+    if (isRetrying) return
+    setIsRetrying(true)
+    try {
+      await reload()
+    } finally {
+      setIsRetrying(false)
+    }
+  }, [isRetrying, reload])
+
+  // Fill input with example text
+  const fillInput = useCallback((text: string) => {
+    setInput(text)
+  }, [setInput])
+
   return {
     messages,
     input,
@@ -61,5 +81,9 @@ export function useStreamingChat() {
     handleScroll,
     showScrollButton,
     scrollToBottom,
+    error,
+    handleRetry,
+    isRetrying,
+    fillInput,
   }
 }
