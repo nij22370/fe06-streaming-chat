@@ -5,6 +5,12 @@ import { ChatMessage } from '@/components/ChatMessage'
 import { ThinkingIndicator } from '@/components/ThinkingIndicator'
 import { StopButton } from '@/components/StopButton'
 import { FormEvent, KeyboardEvent } from 'react'
+import { NpmPackageCard } from '@/components/tools/NpmPackageCard'
+import { 
+  ToolInputStreaming, 
+  ToolInputAvailable, 
+  ToolOutputError 
+} from '@/components/tools/ToolStates'
 
 export default function ChatPage() {
   const {
@@ -80,7 +86,69 @@ export default function ChatPage() {
         )}
 
         {messages.map((message) => (
-          <ChatMessage key={message.id} message={message} />
+          <div key={message.id}>
+            {/* Render text parts */}
+            {message.role === 'user' ? (
+              <ChatMessage message={message} />
+            ) : (
+              <>
+                {/* Assistant text content */}
+                {message.content && typeof message.content === 'string' && 
+                  message.content.trim() && (
+                  <ChatMessage message={message} />
+                )}
+
+                {/* Tool parts */}
+                {message.toolInvocations?.map((tool) => {
+                  // State 1 & 2: Tool is being called
+                  if (tool.state === 'partial-call') {
+                    return (
+                      <div key={tool.toolCallId} className="flex justify-start mb-2">
+                        <ToolInputStreaming />
+                      </div>
+                    )
+                  }
+
+                  // State 2: Input available, waiting for result
+                  if (tool.state === 'call') {
+                    return (
+                      <div key={tool.toolCallId} className="flex justify-start mb-2">
+                        <ToolInputAvailable 
+                          packageName={tool.args?.packageName ?? '...'} 
+                        />
+                      </div>
+                    )
+                  }
+
+                  // State 3 & 4: Result or error available
+                  if (tool.state === 'result') {
+                    // Check if result is an error
+                    if (tool.result?.error || !tool.result?.name) {
+                      return (
+                        <div key={tool.toolCallId} 
+                          className="flex justify-start mb-2">
+                          <ToolOutputError
+                            packageName={tool.args?.packageName}
+                            errorMessage={tool.result?.error}
+                          />
+                        </div>
+                      )
+                    }
+
+                    // Success — render the card
+                    return (
+                      <div key={tool.toolCallId} 
+                        className="flex justify-start mb-2">
+                        <NpmPackageCard data={tool.result} />
+                      </div>
+                    )
+                  }
+
+                  return null
+                })}
+              </>
+            )}
+          </div>
         ))}
 
         {/* Thinking indicator — shows before first token */}

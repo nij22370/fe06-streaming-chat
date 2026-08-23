@@ -34,3 +34,34 @@ npm run dev
 ## Historical note
 This project previously used Google Gemini via @ai-sdk/google
 (GOOGLE_GENERATIVE_AI_API_KEY) and has since been migrated to OpenRouter.
+
+## Tool Contract
+
+### getNpmPackageInfo
+Fetches metadata about an npm package from the registry.
+
+**Trigger:** User asks about any npm package, library, or dependency.
+Examples: "tell me about zustand", "what version is react?", 
+"how popular is axios?"
+
+**Input schema:**
+- packageName: string — exact npm package name
+
+**Return shape:**
+- name: string
+- version: string  
+- description: string
+- weeklyDownloads: number
+- license: string
+- homepage: string | null
+- author: string | null
+- repository: string | null
+
+**Tool states rendered:**
+1. partial-call → spinning indicator "Looking up npm package..."
+2. call → spinning indicator with package name "Fetching [name] from npm..."
+3. result (success) → NpmPackageCard component
+4. result (error) → ToolOutputError component with red error card
+
+**Error state:** Triggered when package name doesn't exist on npm registry.
+Test with: "tell me about sandeshfakepackage999"
